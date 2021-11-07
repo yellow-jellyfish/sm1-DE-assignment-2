@@ -1,13 +1,27 @@
 import requests
 import re
+from google.cloud import storage
+import os
+storage_client = storage.Client()
+
+def upload_to_bucket(path_to_file, bucket_name):
+    blob_name = os.path.basename(path_to_file)
+    bucket = storage_client.get_bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    blob.upload_from_filename(path_to_file)
+
+    #returns a public url
+    return blob.public_url
 
 def get_covid19_twitter(date):
     url = f"https://github.com/thepanacealab/covid19_twitter/raw/master/dailies/{date}/{date}_clean-dataset.tsv.gz"
     resp = requests.get(url)
     if not resp.status_code == 200:
         raise Exception(f"failed to download the file with status {resp.status}")
-    with open(f"./{date}_clean-dataset.tsv.gz", "bw") as fp:
-        fp.write(resp.content)
+    path_to_file = f"./{date}_clean-dataset.tsv.gz"
+    with open(path_to_file, "bw") as fp:
+       fp.write(resp.content)
+    return path_to_file
 
 def get_available_dailies():
     url = "https://api.github.com/repos/thepanacealab/covid19_twitter/git/trees/master?recursive=1"
@@ -26,15 +40,19 @@ def get_available_dailies():
         if not date:
             raise Exception(f"failed to find the date in {path}")
         dates.append(date.group(1))
-        
-    return sorted(set(dates))
 
+    return sorted(set(dates))
 
 if __name__ == "__main__":
     # get_covid19_twitter("2021-10-31")
     dates = get_available_dailies()
+    bucket_name = "covid19_twitter"
     for idx, date in enumerate(dates):
         print(f"{idx}: downloading {date}")
-        get_covid19_twitter(date)
-        if idx >=5:
+        download_path = get_covid19_twitter(date)
+        print(f"{idx}: uploading {date}")
+        upload_to_bucket(download_path, bucket_name)
+        print(f"{idx}: removing {date}")
+        os.remove(download_path)
+        if idx >=10:
             break
