@@ -54,5 +54,3 @@ if __name__ == "__main__":
         upload_to_bucket(download_path, bucket_name)
         print(f"{idx}: removing {date}")
         os.remove(download_path)
-        if idx >=10:
-            break
