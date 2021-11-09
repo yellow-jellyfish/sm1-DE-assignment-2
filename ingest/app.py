@@ -33,7 +33,7 @@ def get_available_dailies():
     dates = []
     for item in tree:
         path = item["path"]
-        if not path.startswith("dailies") or not path.endswith("clean-dataset.tsv.gz"):
+        if not path.startswith("dailies") or not path.endswith("dataset.tsv.gz") or 'clean' in path:
             continue
         regex = r"dailies\/([0-9]{4}-[0-9]{2}-[0-9]{2})\/"
         date = re.match(regex, path)
