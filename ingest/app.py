@@ -6,30 +6,14 @@ import os
 storage_client = storage.Client()
 
 
-def upload_to_bucket(path_to_file, bucket_name):
-    blob_name = os.path.basename(path_to_file)
-    bucket = storage_client.get_bucket(bucket_name)
-    blob = bucket.blob(blob_name)
-    blob.upload_from_filename(path_to_file)
-
-    # returns a public url
-    return blob.public_url
-
-
-def get_covid19_twitter(date):
-    url = f"https://github.com/thepanacealab/covid19_twitter/raw/master/dailies/{date}/{date}-dataset.tsv.gz"
-    resp = requests.get(url)
-    if not resp.status_code == 200:
-        print(f"failed to download the file with status {resp.status}")
-        return
-
-    path_to_file = f"./{date}-dataset.tsv.gz"
-    with open(path_to_file, "bw") as fp:
-        fp.write(resp.content)
-    return path_to_file
-
-
 def get_available_dailies():
+    """Extract the dates available in `dailies` directory in the root of
+    the Covid19 Twitter repository.
+    https://github.com/thepanacealab/covid19_twitter/tree/master/dailies
+
+    The result would be a list of dates as string like:
+    ['2020-03-22', '2020-03-23', ...]
+    """
     url = "https://api.github.com/repos/thepanacealab/covid19_twitter/git/trees/master?recursive=1"
     resp = requests.get(url)
     if not resp.status_code == 200:
@@ -56,7 +40,43 @@ def get_available_dailies():
     return sorted(set(dates))
 
 
-if __name__ == "__main__":
+def get_covid19_twitter(date):
+    """Download covid19 twitter data from the repository with the given
+    `date` and store it in the current path. Return the current path
+    as the result like:
+
+    ./2020-03-22-dataset.tsv.gz
+
+    if failed to download, return None
+    """
+    url = f"https://github.com/thepanacealab/covid19_twitter/raw/master/dailies/{date}/{date}-dataset.tsv.gz"
+    resp = requests.get(url)
+    if not resp.status_code == 200:
+        print(f"failed to download the file with status {resp.status}")
+        return
+
+    path_to_file = f"./{date}-dataset.tsv.gz"
+    with open(path_to_file, "bw") as fp:
+        fp.write(resp.content)
+    return path_to_file
+
+
+def upload_to_bucket(path_to_file, bucket_name):
+    """Upload a file from `path_to_file` to desired `bucket_name`.
+
+    :param path_to_file: The path to the file on the host machine (local system or server).
+    :param bucket_name: The target storage blob bucket name.
+    """
+    blob_name = os.path.basename(path_to_file)
+    bucket = storage_client.get_bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    blob.upload_from_filename(path_to_file)
+
+    # returns a public url
+    return blob.public_url
+
+
+def main():
     dates = get_available_dailies()
     bucket_name = "covid19_twitter"
     for idx, date in enumerate(dates):
@@ -68,3 +88,7 @@ if __name__ == "__main__":
         upload_to_bucket(download_path, bucket_name)
         print(f"{idx}: removing {date}")
         os.remove(download_path)
+
+
+if __name__ == "__main__":
+    main()
