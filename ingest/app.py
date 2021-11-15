@@ -1,64 +1,23 @@
 import requests
 import re
-from google.cloud import storage
+#import google.cloud
+#from google.cloud import storage
 import os
 
-storage_client = storage.Client()
+#storage_client = storage.Client()
 
-
-def get_available_dailies():
-    """Extract the dates available in `dailies` directory in the root of
-    the Covid19 Twitter repository.
-    https://github.com/thepanacealab/covid19_twitter/tree/master/dailies
-
-    The result would be a list of dates as string like:
-    ['2020-03-22', '2020-03-23', ...]
-    """
-    url = "https://api.github.com/repos/thepanacealab/covid19_twitter/git/trees/master?recursive=1"
-    resp = requests.get(url)
-    if not resp.status_code == 200:
-        raise Exception(
-            f"failed to get available dailies with status {resp.status_code}"
-        )
-
-    tree = resp.json()["tree"]
-    dates = []
-    for item in tree:
-        path = item["path"]
-        if (
-            not path.startswith("dailies")
-            or not path.endswith("dataset.tsv.gz")
-            or "clean" in path
-        ):
-            continue
-        regex = r"dailies\/([0-9]{4}-[0-9]{2}-[0-9]{2})\/"
-        date = re.match(regex, path)
-        if not date:
-            raise Exception(f"failed to find the date in {path}")
-        dates.append(date.group(1))
-
-    return sorted(set(dates))
-
-
-def get_covid19_twitter(date):
-    """Download covid19 twitter data from the repository with the given
-    `date` and store it in the current path. Return the current path
-    as the result like:
-
-    ./2020-03-22-dataset.tsv.gz
-
-    if failed to download, return None
-    """
-    url = f"https://github.com/thepanacealab/covid19_twitter/raw/master/dailies/{date}/{date}-dataset.tsv.gz"
+def get_covid19_cases():
+    """Download covid-19-world cases data from the aws repository. If fails to download, returns None."""
+    url = "https://covid19-lake.s3.us-east-2.amazonaws.com/rearc-covid-19-world-cases-deaths-testing/csv/covid-19-world-cases-deaths-testing.csv"
     resp = requests.get(url)
     if not resp.status_code == 200:
         print(f"failed to download the file with status {resp.status}")
         return
+    with open("covid-19-world-cases.csv", "bw") as fileref:
+        fileref.write(resp.content)
+    return resp.status 
 
-    path_to_file = f"./{date}-dataset.tsv.gz"
-    with open(path_to_file, "bw") as fp:
-        fp.write(resp.content)
-    return path_to_file
+get_covid19_cases()
 
 
 def upload_to_bucket(path_to_file, bucket_name):
@@ -90,5 +49,5 @@ def main():
         os.remove(download_path)
 
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+#    main()
