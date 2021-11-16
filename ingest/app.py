@@ -10,11 +10,11 @@ def get_covid19_cases():
     url = "https://covid19-lake.s3.us-east-2.amazonaws.com/rearc-covid-19-world-cases-deaths-testing/csv/covid-19-world-cases-deaths-testing.csv"
     resp = requests.get(url)
     if not resp.status_code == 200:
-        print(f"failed to download the file with status {resp.status}")
+        print(f"failed to download the file with status {resp.status_code}")
         return
     with open("covid-19-world-cases.csv", "bw") as fileref:
         fileref.write(resp.content)
-    return resp.status 
+    return resp.status_code 
 
 
 def upload_to_bucket(file_name, bucket_name):
