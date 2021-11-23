@@ -14,7 +14,7 @@ builder = (
 
 spark = builder.getOrCreate()
 
-def main(path="gs://covid19_cases2/"):
+def main(path="gs://covid19_cases3/"):
     df = (
         spark.read.format("csv")
         .option("header", True)
