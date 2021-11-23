@@ -7,7 +7,7 @@ storage_client = storage.Client()
 
 def get_covid19_cases():
     """Download covid-19-world cases data from the aws repository. If fails to download, returns None."""
-    url = "https://covid19-lake.s3.us-east-2.amazonaws.com/rearc-covid-19-world-cases-deaths-testing/csv/covid-19-world-cases-deaths-testing.csv"
+    url = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv"
     resp = requests.get(url)
     if not resp.status_code == 200:
         print(f"failed to download the file with status {resp.status_code}")
