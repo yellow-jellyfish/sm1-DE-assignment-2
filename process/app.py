@@ -14,7 +14,7 @@ builder = (
 
 spark = builder.getOrCreate()
 
-def main(path="gs://covid19_cases3/"):
+def main(path="gs://covid19_cases/"):
     df = (
         spark.read.format("csv")
         .option("header", True)
@@ -26,7 +26,7 @@ def main(path="gs://covid19_cases3/"):
     df = df.select([when(col(c) == "", None).otherwise(col(c)).alias(c) for c in df.columns])
 
     # Make new column with partial vaccinated people minus fully vaccinated people
-    df = df.withColumn("people_incomplete_vaccination", df.select(df.people_vaccinated - df.people_fully_vaccinated))
+    df = df.withColumn("people_incomplete_vaccination", col("people_vaccinated")-col("people_fully_vaccinated"))
 
     # Drop few columns with less than 1.5% non-null values
     df.drop("weekly_icu_admissions", "weekly_icu_admissions_per_million", "weekly_hosp_admissions", "weekly_hosp_admissions_per_million")
@@ -37,8 +37,8 @@ def main(path="gs://covid19_cases3/"):
 
     df.write.mode("overwrite").format(
         "bigquery"
-    ).option("temporaryGcsBucket", "temp-gcs-bucket3").save(
-        "jadsdataengineering.covid19_cases2"
+    ).option("temporaryGcsBucket", "temp-gcs-bucket4").save(
+        "DEassignment2.covid19cases"
     )
 
 
