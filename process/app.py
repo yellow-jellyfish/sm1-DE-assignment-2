@@ -29,7 +29,7 @@ def main(path="gs://covid19_cases/"):
     df = df.withColumn("people_incomplete_vaccination", col("people_vaccinated")-col("people_fully_vaccinated"))
 
     # Drop few columns with less than 1.5% non-null values
-    df.drop("weekly_icu_admissions", "weekly_icu_admissions_per_million", "weekly_hosp_admissions", "weekly_hosp_admissions_per_million")
+    df = df.drop("weekly_icu_admissions", "weekly_icu_admissions_per_million", "weekly_hosp_admissions", "weekly_hosp_admissions_per_million")
 
     # partition by date
 
